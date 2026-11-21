@@ -56,7 +56,6 @@ FRED_SERIES = [
     {"key": "dgs10", "id": "DGS10", "name": "10-year Treasury", "unit": "%"},
     {"key": "dgs2", "id": "DGS2", "name": "2-year Treasury", "unit": "%"},
     {"key": "dff", "id": "DFF", "name": "Fed funds rate", "unit": "%"},
-    {"key": "t10y2y", "id": "T10Y2Y", "name": "10Y minus 2Y spread", "unit": "pp"},
     {"key": "cpi_yoy", "id": "CPIAUCSL", "name": "CPI inflation (YoY)", "unit": "%",
      "transform": "yoy", "fetch_start": "1999-01-01"},
     {"key": "unrate", "id": "UNRATE", "name": "Unemployment rate", "unit": "%"},

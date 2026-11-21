@@ -419,7 +419,13 @@
         visible.forEach((pts, i) => {
           if (!pts.length) return;
           const ds = downsample(pts, buckets);
-          const d = ds.map((p, j) => `${j ? "L" : "M"}${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`).join("");
+          // Break the line where a series has no observations for longer than maxGapDays
+          // (e.g. years in which a Letras maturity was not issued), instead of bridging it.
+          const maxGap = (opts.maxGapDays ?? Infinity) * 864e5;
+          const d = ds.map((p, j) => {
+            const move = j === 0 || p[0] - ds[j - 1][0] > maxGap;
+            return `${move ? "M" : "L"}${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`;
+          }).join("");
           el("path", { class: "series", d, stroke: series[i].color }, svg);
           const last = pts[pts.length - 1];
           ends.push({ i, y: y(last[1]), x: x(last[0]) });
@@ -569,7 +575,7 @@
           {
             title: "Letras del Tesoro: auction yields", wide: true,
             sub: "Marginal (highest accepted) yield at each Spanish Treasury bill auction, by maturity (%)",
-            series: LETRAS, short: LETRAS_SHORT, format: pct(3), tickFormat: pct(1), toleranceDays: 21,
+            series: LETRAS, short: LETRAS_SHORT, format: pct(3), tickFormat: pct(1), toleranceDays: 21, maxGapDays: 75,
           },
           { kind: "auctions", title: "Latest Letras auctions", sub: "Most recent auction for each maturity. Amounts in € millions." },
           {
@@ -587,15 +593,10 @@
             short: { dgs10: "10Y", dgs2: "2Y", dff: "Fed" }, format: pct(2), tickFormat: pct(1),
           },
           {
-            title: "US yield curve", sub: "10-year minus 2-year Treasury, percentage points", series: ["t10y2y"],
-            format: (v) => `${num(2)(v)} pp`, tickFormat: num(1), refLines: [{ y: 0, label: "Below 0 = inverted" }],
-          },
-          {
             title: "US inflation", sub: "Consumer prices, % change from a year earlier, monthly", series: ["cpi_yoy"],
             format: pct(1), tickFormat: pct(0), refLines: [{ y: 2, label: "Fed target 2%" }], monthly: true,
           },
           { title: "US unemployment rate", sub: "Percent of labor force, monthly", series: ["unrate"], format: pct(1), tickFormat: pct(0), monthly: true },
-          { title: "WTI crude oil", sub: "US dollars per barrel, daily", series: ["wti"], format: usd(2), tickFormat: usd(0) },
           { title: "EUR / USD", sub: "US dollars per euro, daily", series: ["eurusd"], format: num(4), tickFormat: num(2) },
           { title: "Bitcoin", sub: "US dollars, daily (Coinbase)", series: ["btc"], format: usd(0), tickFormat: compactUsd },
         ],

@@ -12,12 +12,14 @@ data every day and redeploys the site, so there is no server and no API key.
 - **Spain & euro area:**
   - *Letras del Tesoro: auction yields.* The marginal (highest accepted) yield of
     every Spanish Treasury bill auction for the 3-, 6-, 9- and 12-month maturities, from 2000 on.
+    The line is broken where a maturity went more than 75 days without an
+    auction (e.g. the 3-month bill was not issued from 2005 to 2008).
   - *Latest Letras auctions.* Amount bid, amount allotted, second-round amount,
     bid-to-cover ratio, marginal and average yield, and the change since the
     previous auction (marginal yield), for each maturity.
   - *ECB main refinancing rate.* The interest rate on the ECB's main refinancing operations.
-- **United States & global markets:** S&P 500, US interest rates, the yield
-  curve, inflation, unemployment, WTI oil, EUR/USD and Bitcoin.
+- **United States & global markets:** S&P 500, US interest rates, inflation,
+  unemployment, EUR/USD and Bitcoin.
 - One range filter (1Y, 5Y, 10Y or Max) controls every chart. Each chart has a
   hover or keyboard tooltip and a monthly table view. Light and dark themes are included.
 
