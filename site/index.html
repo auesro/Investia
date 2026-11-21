@@ -6,7 +6,191 @@
   <title>Investia</title>
   <meta name="description" content="Spanish Treasury bills, ECB rates, markets and the economy: charts built from public data.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%232a78d6'/><path d='M6 22l7-7 5 5 8-10' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
-  <link rel="stylesheet" href="css/style.css">
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #f9f9f7;
+      --surface-1: #fcfcfb;
+      --text-primary: #0b0b0b;
+      --text-secondary: #52514e;
+      --text-muted: #898781;
+      --grid: #e1e0d9;
+      --axis: #c3c2b7;
+      --border: rgba(11, 11, 11, 0.10);
+      --wash: rgba(11, 11, 11, 0.05);
+      --up: #006300;
+      --down: #d03b3b;
+      --series-1: #2a78d6;
+      --series-2: #eb6834;
+      --series-3: #1baf7a;
+      --series-4: #eda100;
+      --ref: #898781;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --page: #0d0d0d;
+        --surface-1: #1a1a19;
+        --text-primary: #f0efec;
+        --text-secondary: #c3c2b7;
+        --grid: #2c2c2a;
+        --axis: #383835;
+        --border: rgba(255, 255, 255, 0.10);
+        --wash: rgba(255, 255, 255, 0.06);
+        --up: #0ca30c;
+        --down: #e66767;
+        --series-1: #3987e5;
+        --series-2: #d95926;
+        --series-3: #199e70;
+        --series-4: #c98500;
+        --shadow: none;
+      }
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --page: #0d0d0d;
+      --surface-1: #1a1a19;
+      --text-primary: #f0efec;
+      --text-secondary: #c3c2b7;
+      --grid: #2c2c2a;
+      --axis: #383835;
+      --border: rgba(255, 255, 255, 0.10);
+      --wash: rgba(255, 255, 255, 0.06);
+      --up: #0ca30c;
+      --down: #e66767;
+      --series-1: #3987e5;
+      --series-2: #d95926;
+      --series-3: #199e70;
+      --series-4: #c98500;
+      --shadow: none;
+    }
+
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--text-primary);
+      font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    a { color: var(--series-1); }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    @media (max-width: 600px) { .wrap { padding: 0 16px; } }
+
+    /* Header */
+    .top { border-bottom: 1px solid var(--border); background: var(--surface-1); }
+    .top-inner { display: flex; align-items: center; justify-content: space-between; padding-top: 14px; padding-bottom: 14px; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo {
+      width: 34px; height: 34px; border-radius: 9px; background: var(--series-1);
+      background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M6 22l7-7 5 5 8-10' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+      background-size: cover;
+    }
+    h1 { font-size: 20px; margin: 0; line-height: 1.2; letter-spacing: -0.01em; }
+    .tagline { margin: 0; color: var(--text-secondary); font-size: 13px; }
+
+    button { font: inherit; color: inherit; cursor: pointer; }
+    .ghost {
+      background: transparent; border: 1px solid var(--border); border-radius: 8px;
+      padding: 6px 12px; color: var(--text-secondary);
+    }
+    .ghost:hover { background: var(--wash); }
+    button:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; }
+
+    /* Filter row */
+    .filters { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 24px 0 16px; }
+    .filters-label { font-size: 13px; color: var(--text-secondary); }
+    .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 9px; padding: 2px; background: var(--surface-1); }
+    .seg button { border: 0; background: transparent; padding: 5px 14px; border-radius: 7px; color: var(--text-secondary); font-size: 14px; }
+    .seg button:hover { background: var(--wash); }
+    .seg button[aria-pressed="true"] { background: var(--text-primary); color: var(--surface-1); font-weight: 600; }
+    .updated { margin-left: auto; font-size: 13px; color: var(--text-muted); }
+
+    /* KPI tiles */
+    .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 8px; }
+    @media (max-width: 860px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .kpi {
+      background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+      padding: 14px 16px; box-shadow: var(--shadow); min-width: 0;
+    }
+    .kpi-label { font-size: 13px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .kpi-value { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.25; margin-top: 2px; }
+    .kpi-delta { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+    /* Direction only, no good/bad color: higher inflation or unemployment is not "good". */
+    .kpi-delta .up, .kpi-delta .down { color: var(--text-primary); font-weight: 600; }
+
+    /* Chart cards */
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    @media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+    .card {
+      background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px;
+      padding: 18px 18px 12px; box-shadow: var(--shadow); min-width: 0;
+    }
+    .card.wide { grid-column: 1 / -1; }
+    .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .section { margin-top: 28px; }
+    .section-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); margin: 0 0 12px; }
+    .card h3 { font-size: 16px; margin: 0; line-height: 1.3; }
+    .card .sub { margin: 2px 0 0; font-size: 13px; color: var(--text-secondary); }
+    .card .ghost { font-size: 12px; padding: 3px 10px; flex: none; }
+    .legend { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 10px 0 0; padding: 0; list-style: none; font-size: 13px; color: var(--text-secondary); }
+    .legend li { display: inline-flex; align-items: center; gap: 6px; }
+    .legend .key { width: 14px; height: 2px; border-radius: 1px; background: currentColor; }
+    .chart { position: relative; height: 260px; margin-top: 8px; touch-action: pan-y; }
+    .chart:focus-visible { outline: 2px solid var(--series-1); outline-offset: 4px; border-radius: 6px; }
+    .chart svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    .card-foot { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+    .card-foot a { color: var(--text-muted); }
+
+    /* SVG chrome */
+    .gridline { stroke: var(--grid); stroke-width: 1; }
+    .baseline { stroke: var(--axis); stroke-width: 1; }
+    .refline { stroke: var(--ref); stroke-width: 1; stroke-dasharray: 3 3; }
+    .reflabel { fill: var(--text-muted); font-size: 11px; }
+    .tick { fill: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+    .series { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+    .endlabel { font-size: 12px; fill: var(--text-secondary); font-weight: 600; }
+    .crosshair { stroke: var(--text-muted); stroke-width: 1; }
+    .dot { stroke: var(--surface-1); stroke-width: 2; }
+
+    /* Tooltip */
+    .tip {
+      position: absolute; top: 0; pointer-events: none; z-index: 2;
+      background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 18px rgba(0,0,0,0.14);
+      white-space: nowrap; min-width: 120px;
+    }
+    .tip-date { color: var(--text-muted); margin-bottom: 4px; }
+    .tip-row { display: flex; align-items: center; gap: 8px; }
+    .tip-row .key { width: 10px; height: 2px; border-radius: 1px; flex: none; }
+    .tip-row b { font-size: 13px; font-variant-numeric: tabular-nums; }
+    .tip-row span:last-child { color: var(--text-secondary); }
+    .tip-row .tip-when { color: var(--text-muted); font-size: 11px; }
+
+    /* Table view */
+    .table-wrap { max-height: 260px; overflow: auto; margin-top: 8px; border-top: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+    th, td { text-align: right; padding: 5px 8px; border-bottom: 1px solid var(--grid); }
+    th:first-child, td:first-child { text-align: left; }
+    tbody th { font-weight: 500; color: var(--text-secondary); position: static; }
+    .table-wrap.static { max-height: none; flex: 1; }
+    .card { display: flex; flex-direction: column; }
+    .card-foot { margin-top: auto; padding-top: 6px; }
+    th { position: sticky; top: 0; background: var(--surface-1); color: var(--text-secondary); font-weight: 600; }
+
+    .error { color: var(--down); }
+    .foot { padding-top: 24px; padding-bottom: 40px; font-size: 13px; color: var(--text-muted); }
+    .foot a { color: var(--text-secondary); }
+    .kpi-date { font-size: 12px; color: var(--text-muted); }
+    /* Halo so reference labels stay legible where a series line crosses them */
+    .reflabel { paint-order: stroke; stroke: var(--surface-1); stroke-width: 4px; stroke-linejoin: round; }
+    @media (max-width: 600px) { .card-foot span:last-child { display: none; } }
+    @media (max-width: 600px) {
+      .table-wrap.static table { font-size: 12px; }
+      .table-wrap.static th, .table-wrap.static td { padding: 5px 4px; }
+    }
+  </style>
 </head>
 <body>
   <header class="top">
@@ -45,6 +229,668 @@
     <p>Data: <a href="https://www.tesoro.es/" rel="noopener">Tesoro Público</a> (Spanish Treasury), <a href="https://data.ecb.europa.eu/" rel="noopener">European Central Bank</a> and <a href="https://fred.stlouisfed.org/" rel="noopener">FRED, Federal Reserve Bank of St. Louis</a>. Refreshed daily. For information only, not investment advice.</p>
   </footer>
 
-  <script type="module" src="js/app.js"></script>
+  <script type="module">
+    // =====================================================================
+    // Chart: minimal dependency-free SVG line chart
+    // =====================================================================
+    // Minimal dependency-free SVG line chart with crosshair tooltip and keyboard support.
+    const NS = "http://www.w3.org/2000/svg";
+    const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    function el(name, attrs = {}, parent) {
+      const node = document.createElementNS(NS, name);
+      for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+      if (parent) parent.appendChild(node);
+      return node;
+    }
+
+    function niceStep(range, count) {
+      const raw = range / Math.max(1, count);
+      const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+      const norm = raw / mag;
+      const step = norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10;
+      return step * mag;
+    }
+
+    function niceTicks(min, max, count) {
+      if (min === max) { min -= 1; max += 1; }
+      const step = niceStep(max - min, count);
+      const lo = Math.floor(min / step) * step;
+      const hi = Math.ceil(max / step) * step;
+      const ticks = [];
+      for (let v = lo; v <= hi + step / 2; v += step) ticks.push(+v.toFixed(10));
+      return ticks;
+    }
+
+    function timeTicks(t0, t1, maxTicks) {
+      const years = (t1 - t0) / (365.25 * 864e5);
+      const out = [];
+      if (years > 2) {
+        const every = [1, 2, 5, 10].find((n) => years / n <= maxTicks) || 10;
+        let y = new Date(t0).getUTCFullYear() + 1;
+        y = Math.ceil(y / every) * every;
+        for (; ; y += every) {
+          const t = Date.UTC(y, 0, 1);
+          if (t > t1) break;
+          out.push({ t, label: String(y) });
+        }
+      } else {
+        const months = years * 12;
+        const every = [1, 2, 3, 6].find((n) => months / n <= maxTicks) || 6;
+        const d = new Date(t0);
+        let y = d.getUTCFullYear(), m = d.getUTCMonth() + 1;
+        m = Math.ceil(m / every) * every;
+        for (; ; m += every) {
+          const t = Date.UTC(y + Math.floor(m / 12), m % 12, 1);
+          if (t > t1) break;
+          const dt = new Date(t);
+          const mm = dt.getUTCMonth();
+          out.push({ t, label: mm === 0 ? String(dt.getUTCFullYear()) : MONTHS[mm] });
+        }
+      }
+      return out;
+    }
+
+    // Keep the shape on screen by retaining min and max of each pixel bucket.
+    function downsample(points, buckets) {
+      if (points.length <= buckets * 2) return points;
+      const out = [];
+      const size = points.length / buckets;
+      for (let b = 0; b < buckets; b++) {
+        const start = Math.floor(b * size), end = Math.min(points.length, Math.floor((b + 1) * size));
+        let lo = start, hi = start;
+        for (let i = start; i < end; i++) {
+          if (points[i][1] < points[lo][1]) lo = i;
+          if (points[i][1] > points[hi][1]) hi = i;
+        }
+        if (lo === hi) out.push(points[lo]);
+        else if (lo < hi) out.push(points[lo], points[hi]);
+        else out.push(points[hi], points[lo]);
+      }
+      const last = points[points.length - 1];
+      if (out[out.length - 1] !== last) out.push(last);
+      return out;
+    }
+
+    function bisect(points, t) {
+      let lo = 0, hi = points.length - 1;
+      if (hi < 0) return -1;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (points[mid][0] < t) lo = mid + 1; else hi = mid;
+      }
+      if (lo > 0 && Math.abs(points[lo - 1][0] - t) < Math.abs(points[lo][0] - t)) lo--;
+      return lo;
+    }
+
+    function formatDate(t, monthly) {
+      const d = new Date(t);
+      const base = `${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+      return monthly ? base : `${d.getUTCDate()} ${base}`;
+    }
+
+    /**
+     * series: [{ name, color: "var(--series-1)", data: [[ms, value], ...] }]
+     * opts: { format(v), tickFormat(v), refLines: [{ y, label }], monthly, includeZero }
+     */
+    function lineChart(container, series, opts = {}) {
+      const format = opts.format || ((v) => v.toLocaleString());
+      const tickFormat = opts.tickFormat || format;
+      let range = [-Infinity, Infinity];
+      let hoverIndex = null; // index into the primary series' visible points
+      let state = null;
+
+      container.tabIndex = 0;
+      container.setAttribute("role", "img");
+      const svg = el("svg", {}, container);
+      const tip = document.createElement("div");
+      tip.className = "tip";
+      tip.hidden = true;
+      container.appendChild(tip);
+
+      function render() {
+        const W = container.clientWidth, H = container.clientHeight;
+        if (!W || !H) return;
+        svg.replaceChildren();
+        svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+
+        const visible = series.map((s) => {
+          const pts = s.data.filter((p) => p[0] >= range[0] && p[0] <= range[1]);
+          if (opts.step) {
+            // Step series store only change points: carry the rate in force at the range start.
+            const before = s.data.filter((p) => p[0] < range[0]);
+            if (before.length) pts.unshift([range[0], before[before.length - 1][1]]);
+          }
+          return pts;
+        });
+        const all = visible.flat();
+        if (!all.length) return;
+        let t0 = Infinity, t1 = -Infinity, v0 = Infinity, v1 = -Infinity;
+        for (const [t, v] of all) {
+          if (t < t0) t0 = t; if (t > t1) t1 = t;
+          if (v < v0) v0 = v; if (v > v1) v1 = v;
+        }
+        for (const r of opts.refLines || []) { v0 = Math.min(v0, r.y); v1 = Math.max(v1, r.y); }
+        if (opts.includeZero) { v0 = Math.min(v0, 0); v1 = Math.max(v1, 0); }
+        const pad = (v1 - v0) * 0.06 || 1;
+        const lo = v0 >= 0 && v0 - pad < 0 ? 0 : v0 - pad; // don't invent negative axis room
+        const yt = niceTicks(lo, v1 + pad, H < 220 ? 4 : 5);
+        // If the short tick format collapses neighbours (4%, 4%), fall back to the full format.
+        let fmtTick = tickFormat;
+        if (new Set(yt.map(tickFormat)).size < yt.length) fmtTick = format;
+        const yMin = yt[0], yMax = yt[yt.length - 1];
+
+        const labelW = Math.max(...yt.map((v) => fmtTick(v).length)) * 6.6 + 10;
+        const endLabels = series.length > 1;
+        const m = { top: 8, right: endLabels ? 44 : 8, bottom: 24, left: labelW };
+        const iw = W - m.left - m.right, ih = H - m.top - m.bottom;
+        const x = (t) => m.left + ((t - t0) / (t1 - t0 || 1)) * iw;
+        const y = (v) => m.top + (1 - (v - yMin) / (yMax - yMin)) * ih;
+
+        // Grid + y ticks
+        for (const v of yt) {
+          el("line", { class: "gridline", x1: m.left, x2: m.left + iw, y1: y(v), y2: y(v) }, svg);
+          const lbl = el("text", { class: "tick", x: m.left - 8, y: y(v) + 4, "text-anchor": "end" }, svg);
+          lbl.textContent = fmtTick(v);
+        }
+        el("line", { class: "baseline", x1: m.left, x2: m.left + iw, y1: m.top + ih, y2: m.top + ih }, svg);
+
+        // X ticks
+        for (const tk of timeTicks(t0, t1, Math.max(2, Math.floor(iw / 70)))) {
+          const lbl = el("text", { class: "tick", x: x(tk.t), y: H - 6, "text-anchor": "middle" }, svg);
+          lbl.textContent = tk.label;
+        }
+
+        // Reference lines
+        for (const r of opts.refLines || []) {
+          el("line", { class: "refline", x1: m.left, x2: m.left + iw, y1: y(r.y), y2: y(r.y) }, svg);
+          if (r.label) {
+            const lbl = el("text", { class: "reflabel", x: m.left + iw - 4, y: y(r.y) + 14, "text-anchor": "end" }, svg);
+            lbl.textContent = r.label;
+          }
+        }
+
+        // Lines
+        const buckets = Math.max(50, Math.floor(iw));
+        const ends = [];
+        visible.forEach((pts, i) => {
+          if (!pts.length) return;
+          const ds = downsample(pts, buckets);
+          const d = ds.map((p, j) => `${j ? "L" : "M"}${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`).join("");
+          el("path", { class: "series", d, stroke: series[i].color }, svg);
+          const last = pts[pts.length - 1];
+          ends.push({ i, y: y(last[1]), x: x(last[0]) });
+        });
+
+        // Direct labels at the right end, nudged apart so they never collide
+        if (endLabels) {
+          ends.sort((a, b) => a.y - b.y);
+          for (let k = 1; k < ends.length; k++) if (ends[k].y - ends[k - 1].y < 14) ends[k].y = ends[k - 1].y + 14;
+          for (const e of ends) {
+            const lbl = el("text", { class: "endlabel", x: m.left + iw + 6, y: e.y + 4 }, svg);
+            lbl.textContent = series[e.i].short || series[e.i].name;
+          }
+        }
+
+        // Hover layer
+        const hover = el("g", { "pointer-events": "none" }, svg);
+        // Hover stops: every date present in any visible series, so series observed on
+        // different days (e.g. Letras tenors auctioned on alternate weeks) are all reachable.
+        const stops = [...new Set(all.map((p) => p[0]))].sort((a, b) => a - b).map((t) => [t]);
+        state = { x, y, m, iw, ih, visible, hover, W, t0, t1, stops };
+        container.setAttribute("aria-label", opts.label || series.map((s) => s.name).join(", "));
+        if (hoverIndex !== null) drawHover();
+      }
+
+      function drawHover() {
+        const { x, y, m, ih, visible, hover, W } = state;
+        hover.replaceChildren();
+        const stops = state.stops;
+        if (!stops.length) { tip.hidden = true; return; }
+        hoverIndex = Math.max(0, Math.min(stops.length - 1, hoverIndex));
+        const t = stops[hoverIndex][0];
+        const tolerance = (opts.toleranceDays ?? (opts.monthly ? 35 : 7)) * 864e5;
+        const px = x(t);
+        el("line", { class: "crosshair", x1: px, x2: px, y1: m.top, y2: m.top + ih }, hover);
+
+        tip.replaceChildren();
+        const date = document.createElement("div");
+        date.className = "tip-date";
+        date.textContent = formatDate(t, opts.monthly);
+        tip.appendChild(date);
+        visible.forEach((pts, i) => {
+          let j = bisect(pts, t);
+          if (j < 0) return;
+          if (opts.step && pts[j][0] > t) j -= 1; // rate in force on that date
+          if (j < 0) return;
+          const p = pts[j];
+          if (!opts.step && Math.abs(p[0] - t) > tolerance) return; // no nearby value
+          el("circle", { class: "dot", cx: x(opts.step ? t : p[0]), cy: y(p[1]), r: 4.5, fill: series[i].color }, hover);
+          const row = document.createElement("div");
+          row.className = "tip-row";
+          const key = document.createElement("span");
+          key.className = "key";
+          key.style.background = series[i].color;
+          const val = document.createElement("b");
+          val.textContent = format(p[1]);
+          const name = document.createElement("span");
+          name.textContent = series[i].name;
+          row.append(key, val, name);
+          if (p[0] !== t && !opts.monthly && !opts.step) {
+            const when = document.createElement("span");
+            when.className = "tip-when";
+            when.textContent = formatDate(p[0]);
+            row.appendChild(when);
+          }
+          tip.appendChild(row);
+        });
+        tip.hidden = false;
+        const tw = tip.offsetWidth;
+        const left = px + 14 + tw > W ? px - 14 - tw : px + 14;
+        tip.style.left = `${Math.max(0, left)}px`;
+        tip.style.top = `${m.top}px`;
+      }
+
+      function onPointer(ev) {
+        if (!state) return;
+        const rect = container.getBoundingClientRect();
+        const px = ev.clientX - rect.left;
+        const { m, iw, visible } = state;
+        if (px < m.left - 10 || px > m.left + iw + 10) return hide();
+        if (!state.stops.length) return;
+        const t = state.t0 + ((px - m.left) / iw) * (state.t1 - state.t0);
+        hoverIndex = bisect(state.stops, t);
+        drawHover();
+      }
+
+      function hide() {
+        hoverIndex = null;
+        tip.hidden = true;
+        if (state) state.hover.replaceChildren();
+      }
+
+      container.addEventListener("pointermove", onPointer);
+      container.addEventListener("pointerdown", onPointer);
+      container.addEventListener("pointerleave", hide);
+      container.addEventListener("blur", hide);
+      container.addEventListener("keydown", (ev) => {
+        if (!state) return;
+        const n = state.stops.length;
+        const stepSize = ev.shiftKey ? Math.max(1, Math.round(n / 20)) : 1;
+        if (ev.key === "ArrowRight" || ev.key === "ArrowLeft") {
+          if (hoverIndex === null) hoverIndex = n - 1;
+          else hoverIndex += ev.key === "ArrowRight" ? stepSize : -stepSize;
+        } else if (ev.key === "Home") hoverIndex = 0;
+        else if (ev.key === "End") hoverIndex = n - 1;
+        else if (ev.key === "Escape") return hide();
+        else return;
+        ev.preventDefault();
+        drawHover();
+      });
+
+      new ResizeObserver(() => render()).observe(container);
+
+      return {
+        setRange(from, to = Infinity) { range = [from, to]; hide(); render(); },
+      };
+    }
+
+    // =====================================================================
+    // App: panels, summary tiles, data loading
+    // =====================================================================
+    // ---- What to show -------------------------------------------------------
+    // To add a panel: add the series to scripts/fetch_data.py, then list it here.
+    const num = (d) => (v) => v.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+    const pct = (d) => (v) => `${num(d)(v)}%`;
+    const usd = (d) => (v) => `$${num(d)(v)}`;
+    const compactUsd = (v) => Math.abs(v) >= 1000 ? `$${num(0)(v / 1000)}k` : `$${num(0)(v)}`;
+
+    const KPIS = [
+      { key: "ecb_mrr", label: "ECB main refinancing rate", format: pct(2), delta: "pp" },
+      { key: "letras_12m", label: "Letras 12M (marginal)", format: pct(3), delta: "pp" },
+      { key: "letras_3m", label: "Letras 3M (marginal)", format: pct(3), delta: "pp" },
+      { key: "sp500", label: "S&P 500", format: num(0), delta: "pct" },
+      { key: "dgs10", label: "US 10Y Treasury", format: pct(2), delta: "pp" },
+      { key: "cpi_yoy", label: "US CPI inflation", format: pct(1), delta: "pp", monthly: true },
+      { key: "wti", label: "WTI oil", format: usd(2), delta: "pct" },
+      { key: "btc", label: "Bitcoin", format: usd(0), delta: "pct" },
+    ];
+
+    const LETRAS = ["letras_3m", "letras_6m", "letras_9m", "letras_12m"];
+    const LETRAS_SHORT = { letras_3m: "3M", letras_6m: "6M", letras_9m: "9M", letras_12m: "12M" };
+
+    const SECTIONS = [
+      {
+        title: "Spain & euro area",
+        panels: [
+          {
+            title: "Letras del Tesoro: auction yields", wide: true,
+            sub: "Marginal (highest accepted) yield at each Spanish Treasury bill auction, by maturity (%)",
+            series: LETRAS, short: LETRAS_SHORT, format: pct(3), tickFormat: pct(1), toleranceDays: 21,
+          },
+          { kind: "auctions", title: "Latest Letras auctions", sub: "Most recent auction for each maturity. Amounts in € millions." },
+          {
+            title: "ECB main refinancing rate", sub: "Interest rate on the ECB's main refinancing operations (%)",
+            series: ["ecb_mrr"], format: pct(2), tickFormat: pct(1), step: true,
+          },
+        ],
+      },
+      {
+        title: "United States & global markets",
+        panels: [
+          { title: "S&P 500", sub: "Index level, daily close", series: ["sp500"], format: num(0) },
+          {
+            title: "US interest rates", sub: "Percent per year, daily", series: ["dgs10", "dgs2", "dff"],
+            short: { dgs10: "10Y", dgs2: "2Y", dff: "Fed" }, format: pct(2), tickFormat: pct(1),
+          },
+          {
+            title: "US yield curve", sub: "10-year minus 2-year Treasury, percentage points", series: ["t10y2y"],
+            format: (v) => `${num(2)(v)} pp`, tickFormat: num(1), refLines: [{ y: 0, label: "Below 0 = inverted" }],
+          },
+          {
+            title: "US inflation", sub: "Consumer prices, % change from a year earlier, monthly", series: ["cpi_yoy"],
+            format: pct(1), tickFormat: pct(0), refLines: [{ y: 2, label: "Fed target 2%" }], monthly: true,
+          },
+          { title: "US unemployment rate", sub: "Percent of labor force, monthly", series: ["unrate"], format: pct(1), tickFormat: pct(0), monthly: true },
+          { title: "WTI crude oil", sub: "US dollars per barrel, daily", series: ["wti"], format: usd(2), tickFormat: usd(0) },
+          { title: "EUR / USD", sub: "US dollars per euro, daily", series: ["eurusd"], format: num(4), tickFormat: num(2) },
+          { title: "Bitcoin", sub: "US dollars, daily (Coinbase)", series: ["btc"], format: usd(0), tickFormat: compactUsd },
+        ],
+      },
+    ];
+
+    const COLORS = ["var(--series-1)", "var(--series-2)", "var(--series-3)", "var(--series-4)"];
+
+    // ---- Theme toggle -------------------------------------------------------
+    const root = document.documentElement;
+    try { const saved = localStorage.getItem("theme"); if (saved) root.dataset.theme = saved; } catch {}
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+      const dark = root.dataset.theme
+        ? root.dataset.theme === "dark"
+        : matchMedia("(prefers-color-scheme: dark)").matches;
+      root.dataset.theme = dark ? "light" : "dark";
+      try { localStorage.setItem("theme", root.dataset.theme); } catch {}
+    });
+
+    // ---- Data ---------------------------------------------------------------
+    async function loadJSON(path) {
+      const res = await fetch(path, { cache: "no-cache" });
+      if (!res.ok) throw new Error(`${path}: HTTP ${res.status}`);
+      return res.json();
+    }
+
+    async function loadAll() {
+      const index = await loadJSON("data/index.json");
+      const entries = await Promise.all(index.series.map(async (meta) => {
+        const s = await loadJSON(`data/${meta.key}.json`);
+        s.points = s.data.map(([d, v]) => [Date.parse(d + "T00:00:00Z"), v]);
+        return [meta.key, s];
+      }));
+      const data = Object.fromEntries(entries);
+      let auctions = null;
+      try {
+        auctions = await loadJSON("data/letras_auctions.json");
+      } catch (err) {
+        console.warn("Letras auction details unavailable", err);
+      }
+      return { updated: index.updated, data, auctions };
+    }
+
+    // ---- Rendering ----------------------------------------------------------
+    function rangeStart(years, now) {
+      if (!years) return -Infinity;
+      const d = new Date(now);
+      d.setUTCFullYear(d.getUTCFullYear() - years);
+      return d.getTime();
+    }
+
+    function valueAtOrAfter(points, t) {
+      return points.find((p) => p[0] >= t) || points[0];
+    }
+
+    function renderKpis(data, years) {
+      const host = document.getElementById("kpis");
+      host.replaceChildren();
+      const label = years ? `${years}Y` : "since 2000";
+      for (const k of KPIS) {
+        const s = data[k.key];
+        if (!s) continue;
+        const last = s.points[s.points.length - 1];
+        const first = valueAtOrAfter(s.points, rangeStart(years, last[0]));
+        const tile = document.createElement("div");
+        tile.className = "kpi";
+        const l = document.createElement("div"); l.className = "kpi-label"; l.textContent = k.label;
+        const v = document.createElement("div"); v.className = "kpi-value"; v.textContent = k.format(last[1]);
+        const d = document.createElement("div"); d.className = "kpi-delta";
+        const change = k.delta === "pct" ? (last[1] / first[1] - 1) * 100 : last[1] - first[1];
+        const mark = document.createElement("span");
+        mark.className = change >= 0 ? "up" : "down";
+        const arrow = change >= 0 ? "▲" : "▼";
+        mark.textContent = `${arrow} ${num(1)(Math.abs(change))}${k.delta === "pct" ? "%" : " pp"}`;
+        d.append(mark, ` ${label}`);
+        const asof = document.createElement("div"); asof.className = "kpi-date";
+        asof.textContent = `as of ${formatDate(last[0], k.monthly)}`;
+        tile.title = `${s.name}. Source: ${s.source}`;
+        tile.append(l, v, d, asof);
+        host.appendChild(tile);
+      }
+    }
+
+    function monthlyRows(panel, data, from) {
+      // One row per month (last observation), newest first, for the table view.
+      const months = new Map();
+      panel.series.forEach((key, i) => {
+        for (const [t, v] of data[key].points) {
+          if (t < from) continue;
+          const d = new Date(t);
+          const mk = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+          if (!months.has(mk)) months.set(mk, { t, vals: [] });
+          const row = months.get(mk);
+          row.t = Math.max(row.t, t);
+          row.vals[i] = v;
+        }
+      });
+      return [...months.entries()].sort((a, b) => (a[0] < b[0] ? 1 : -1));
+    }
+
+    function buildTable(panel, data, from) {
+      const table = document.createElement("table");
+      const head = table.createTHead().insertRow();
+      const th0 = document.createElement("th"); th0.textContent = "Month"; head.appendChild(th0);
+      for (const key of panel.series) {
+        const th = document.createElement("th");
+        th.textContent = data[key].name;
+        head.appendChild(th);
+      }
+      const body = table.createTBody();
+      for (const [mk, row] of monthlyRows(panel, data, from)) {
+        const tr = body.insertRow();
+        tr.insertCell().textContent = formatDate(Date.parse(mk + "-01T00:00:00Z"), true);
+        panel.series.forEach((_, i) => {
+          tr.insertCell().textContent = row.vals[i] == null ? "–" : panel.format(row.vals[i]);
+        });
+      }
+      return table;
+    }
+
+    function sourceLinks(keys, data) {
+      const span = document.createElement("span");
+      span.append("Source: ");
+      const seen = new Set();
+      for (const key of keys) {
+        const d = data[key];
+        if (!d || seen.has(d.url)) continue;
+        if (seen.size) span.append(", ");
+        seen.add(d.url);
+        const a = document.createElement("a");
+        a.href = d.url; a.rel = "noopener";
+        a.textContent = d.source_short === "Tesoro" ? "Tesoro Público" : `${d.source_short || "FRED"} ${d.id}`;
+        span.appendChild(a);
+      }
+      return span;
+    }
+
+    function cardShell(panel) {
+      const card = document.createElement("article");
+      card.className = panel.wide ? "card wide" : "card";
+      const head = document.createElement("div"); head.className = "card-head";
+      const titles = document.createElement("div");
+      const h = document.createElement("h3"); h.textContent = panel.title;
+      const sub = document.createElement("p"); sub.className = "sub"; sub.textContent = panel.sub;
+      titles.append(h, sub);
+      head.appendChild(titles);
+      card.appendChild(head);
+      return { card, head };
+    }
+
+    // Card with the latest auction for each Letras maturity (independent of the range filter).
+    function renderAuctionCard(panel, auctions, data) {
+      const { card } = cardShell(panel);
+      const tenors = [3, 6, 9, 12];
+      const latest = tenors.map((t) => {
+        const list = auctions.auctions.filter((a) => a.tenor === t);
+        return { last: list[list.length - 1], prev: list[list.length - 2] };
+      });
+      const fmt = (v, d) => (v == null ? "–" : num(d)(v));
+      const rows = [
+        ["Auction date", ({ last }) => last && formatDate(Date.parse(last.date + "T00:00:00Z"))],
+        ["Bid", ({ last }) => last && fmt(last.requested, 0)],
+        ["Allotted", ({ last }) => last && fmt(last.allotted, 0)],
+        ["Second round", ({ last }) => last && fmt(last.second_round, 0)],
+        ["Bid-to-cover", ({ last }) => last && (last.cover ? `${fmt(last.cover, 2)}×` : "–")],
+        ["Marginal yield", ({ last }) => last && pct(3)(last.marginal)],
+        ["Average yield", ({ last }) => last && pct(3)(last.average)],
+        ["Marginal vs previous", ({ last, prev }) => {
+          if (!last || !prev) return "–";
+          const d = last.marginal - prev.marginal;
+          return `${d >= 0 ? "▲" : "▼"} ${num(3)(Math.abs(d))} pp`;
+        }],
+      ];
+      const wrap = document.createElement("div"); wrap.className = "table-wrap static";
+      const table = document.createElement("table");
+      const head = table.createTHead().insertRow();
+      const th0 = document.createElement("th"); th0.textContent = "Maturity"; head.appendChild(th0);
+      for (const t of tenors) {
+        const th = document.createElement("th"); th.textContent = `${t}M`; th.title = `${t}-month Letras`; head.appendChild(th);
+      }
+      const body = table.createTBody();
+      for (const [label, get] of rows) {
+        const tr = body.insertRow();
+        const th = document.createElement("th"); th.scope = "row"; th.textContent = label; tr.appendChild(th);
+        for (const l of latest) tr.insertCell().textContent = get(l) ?? "–";
+      }
+      wrap.appendChild(table);
+      card.appendChild(wrap);
+      const foot = document.createElement("div"); foot.className = "card-foot";
+      const src = document.createElement("span");
+      src.append("Source: ");
+      const a = document.createElement("a"); a.href = auctions.url; a.rel = "noopener"; a.textContent = "Tesoro Público, latest auction results";
+      src.appendChild(a);
+      foot.appendChild(src);
+      card.appendChild(foot);
+      return card;
+    }
+
+    function renderChartCard(panel, data) {
+      const { card, head } = cardShell(panel);
+      const toggle = document.createElement("button");
+      toggle.className = "ghost"; toggle.type = "button"; toggle.textContent = "Table";
+      toggle.setAttribute("aria-expanded", "false");
+      head.appendChild(toggle);
+
+      const series = panel.series.map((key, i) => ({
+        name: data[key].name, short: panel.short?.[key], color: COLORS[i], data: data[key].points,
+      }));
+      if (series.length > 1) {
+        const legend = document.createElement("ul"); legend.className = "legend";
+        series.forEach((s) => {
+          const li = document.createElement("li");
+          const key = document.createElement("span"); key.className = "key"; key.style.background = s.color;
+          li.append(key, s.name);
+          legend.appendChild(li);
+        });
+        card.appendChild(legend);
+      }
+
+      const chartEl = document.createElement("div"); chartEl.className = "chart";
+      const tableWrap = document.createElement("div"); tableWrap.className = "table-wrap"; tableWrap.hidden = true;
+      card.append(chartEl, tableWrap);
+
+      const foot = document.createElement("div"); foot.className = "card-foot";
+      const hint = document.createElement("span"); hint.textContent = "Hover or use ← → keys";
+      foot.append(sourceLinks(panel.series, data), hint);
+      card.appendChild(foot);
+
+      // The chart measures its container, so it is created once the card is in the page.
+      let chart = null;
+      let from = -Infinity;
+      toggle.addEventListener("click", () => {
+        const open = tableWrap.hidden;
+        tableWrap.hidden = !open;
+        chartEl.hidden = open;
+        toggle.textContent = open ? "Chart" : "Table";
+        toggle.setAttribute("aria-expanded", String(open));
+        if (open) tableWrap.replaceChildren(buildTable(panel, data, from));
+      });
+      return {
+        card,
+        mount() { chart = lineChart(chartEl, series, { ...panel, label: `${panel.title}: ${panel.sub}` }); },
+        setRange(f) {
+          from = f; chart?.setRange(f);
+          if (!tableWrap.hidden) tableWrap.replaceChildren(buildTable(panel, data, from));
+        },
+      };
+    }
+
+    function renderSections(data, auctions) {
+      const host = document.getElementById("panels");
+      const charts = [];
+      for (const section of SECTIONS) {
+        const sec = document.createElement("section");
+        sec.className = "section";
+        const h = document.createElement("h2"); h.className = "section-title"; h.textContent = section.title;
+        const grid = document.createElement("div"); grid.className = "grid";
+        for (const panel of section.panels) {
+          if (panel.kind === "auctions") {
+            if (auctions) grid.appendChild(renderAuctionCard(panel, auctions, data));
+            continue;
+          }
+          if (!panel.series.every((k) => data[k])) continue;
+          const c = renderChartCard(panel, data);
+          grid.appendChild(c.card);
+          charts.push(c);
+        }
+        if (!grid.children.length) continue;
+        sec.append(h, grid);
+        host.appendChild(sec);
+      }
+      charts.forEach((c) => c.mount());
+      return charts;
+    }
+
+    async function main() {
+      try {
+        const { updated, data, auctions } = await loadAll();
+        document.getElementById("updated").textContent =
+          `Updated ${new Date(updated).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}`;
+        const charts = renderSections(data, auctions);
+        const buttons = [...document.querySelectorAll("#range button")];
+        const apply = (years) => {
+          buttons.forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.range === years)));
+          const from = rangeStart(years, Date.now());
+          charts.forEach((c) => c.setRange(from));
+          renderKpis(data, years);
+        };
+        buttons.forEach((b) => b.addEventListener("click", () => apply(+b.dataset.range)));
+        apply(5);
+      } catch (err) {
+        const e = document.getElementById("error");
+        e.hidden = false;
+        e.textContent = `Could not load data (${err.message}). If running locally, run "python3 scripts/fetch_data.py" and serve the site folder with a local web server.`;
+      }
+    }
+
+    main();
+  </script>
 </body>
 </html>

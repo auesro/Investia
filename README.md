@@ -37,10 +37,9 @@ with the wrong year. The fetcher takes the year from the sheet name instead.
 ```
 scripts/fetch_data.py         downloads the series and writes site/data/*.json (stdlib only)
 scripts/xlsx.py               minimal .xlsx reader used for the Tesoro workbooks
-site/index.html               the page
-site/css/style.css            styles, with light and dark color tokens
-site/js/chart.js              small dependency-free SVG line chart
-site/js/app.js                panel and summary tile configuration, plus rendering
+site/index.html               the whole page in one file: styles, chart code, and the
+                              panel and summary tile configuration (see its section comments)
+site/data/                    generated JSON data (not in git; created by the fetcher)
 .github/workflows/deploy.yml  daily data refresh and GitHub Pages deploy
 ```
 
@@ -70,7 +69,7 @@ cd site && python3 -m http.server 8000
 
 1. Find the series on FRED and copy its ID from the URL, for example `MORTGAGE30US`.
 2. Add it to `FRED_SERIES` in `scripts/fetch_data.py` (or `ECB_SERIES` for an ECB series).
-3. Add a panel to one of the `SECTIONS` (and, if you like, a summary tile to `KPIS`) in `site/js/app.js`.
+3. Add a panel to one of the `SECTIONS` (and, if you like, a summary tile to `KPIS`) in the script inside `site/index.html`.
 
 Other public sources, such as the World Bank, ECB or Eurostat APIs, can be added
 the same way. Write a fetch function that returns `[(date, value), ...]`.
