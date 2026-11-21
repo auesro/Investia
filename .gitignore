@@ -1,0 +1,4 @@
+# Data is fetched fresh by the GitHub Action on every deploy
+site/data/
+__pycache__/
+.DS_Store

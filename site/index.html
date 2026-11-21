@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Investia</title>
+  <meta name="description" content="Spanish Treasury bills, ECB rates, markets and the economy: charts built from public data.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%232a78d6'/><path d='M6 22l7-7 5 5 8-10' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap top-inner">
+      <div class="brand">
+        <span class="logo" aria-hidden="true"></span>
+        <div>
+          <h1>Investia</h1>
+          <p class="tagline">Markets and economy at a glance</p>
+        </div>
+      </div>
+      <button id="theme-toggle" class="ghost" type="button" aria-label="Toggle dark mode">Theme</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="filters" role="group" aria-label="Time range">
+      <span class="filters-label">Range</span>
+      <div class="seg" id="range">
+        <button type="button" data-range="1">1Y</button>
+        <button type="button" data-range="5" aria-pressed="true">5Y</button>
+        <button type="button" data-range="10">10Y</button>
+        <button type="button" data-range="0">Max</button>
+      </div>
+      <span class="updated" id="updated"></span>
+    </div>
+
+    <section class="kpis" id="kpis" aria-label="Latest values"></section>
+
+    <div id="panels"></div>
+
+    <p class="error" id="error" hidden></p>
+  </main>
+
+  <footer class="wrap foot">
+    <p>Data: <a href="https://www.tesoro.es/" rel="noopener">Tesoro Público</a> (Spanish Treasury), <a href="https://data.ecb.europa.eu/" rel="noopener">European Central Bank</a> and <a href="https://fred.stlouisfed.org/" rel="noopener">FRED, Federal Reserve Bank of St. Louis</a>. Refreshed daily. For information only, not investment advice.</p>
+  </footer>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
