@@ -7,8 +7,8 @@ data every day and redeploys the site, so there is no server and no API key.
 ## What's on the page
 
 - **Summary tiles:** ECB main refinancing rate, the latest 12-month and 3-month
-  Letras del Tesoro marginal yields, IBEX 35, Euro Stoxx 50, S&P 500, MSCI World,
-  MSCI Emerging Markets, US 10-year Treasury, US CPI inflation and Bitcoin. Each shows its latest value and its change over the selected range.
+  Letras del Tesoro marginal yields, IBEX 35, Euro Stoxx 50, S&P 500, MSCI World
+  and MSCI Emerging Markets. Each shows its latest value and its change over the selected range.
 - **Spain & euro area:**
   - *Letras del Tesoro: auction yields.* The marginal (highest accepted) yield of
     every Spanish Treasury bill auction for the 3-, 6-, 9- and 12-month maturities, from 2000 on.
