@@ -29,6 +29,12 @@ data every day and redeploys the site, so there is no server and no API key.
 | ECB main refinancing rate | [ECB Data Portal](https://data.ecb.europa.eu/) API, series FM.D.U2.EUR.4F.KR.MRR_FR.LEV |
 | US and market series | [FRED](https://fred.stlouisfed.org/) CSV download endpoint |
 
+From June 2000 to October 2008 the ECB ran its main refinancing operations as
+variable rate tenders, so the fixed-rate series has no values for that period.
+The fetcher fills it with the minimum bid rate from the
+[ECB's key interest rates table](https://www.ecb.europa.eu/stats/policy_and_exchange_rates/key_ecb_interest_rates/html/index.en.html),
+stored as fixed data in `scripts/fetch_data.py` (`ECB_MRO_MIN_BID_RATE`).
+
 The Tesoro workbooks store each auction's day and month correctly, but often
 with the wrong year. The fetcher takes the year from the sheet name instead.
 

@@ -69,6 +69,24 @@ ECB_SERIES = [
     {"key": "ecb_mrr", "id": "D.U2.EUR.4F.KR.MRR_FR.LEV", "name": "Main refinancing operations", "unit": "%"},
 ]
 
+# From 28 June 2000 to 14 October 2008 the ECB ran its main refinancing operations
+# as variable rate tenders, so the fixed-rate series (MRR_FR) has no values then.
+# For that period we use the minimum bid rate, as published in the ECB's table of key
+# interest rates. It is historical and never changes, so it is kept here as fixed data.
+# Source: https://www.ecb.europa.eu/stats/policy_and_exchange_rates/key_ecb_interest_rates/html/index.en.html
+ECB_MRO_VARIABLE_TENDER_END = "2008-10-14"
+ECB_MRO_MIN_BID_RATE = [  # (date the rate took effect, minimum bid rate %)
+    ("2000-06-28", 4.25), ("2000-09-01", 4.50), ("2000-10-06", 4.75),
+    ("2001-05-11", 4.50), ("2001-08-31", 4.25), ("2001-09-18", 3.75), ("2001-11-09", 3.25),
+    ("2002-12-06", 2.75),
+    ("2003-03-07", 2.50), ("2003-06-06", 2.00),
+    ("2005-12-06", 2.25),
+    ("2006-03-08", 2.50), ("2006-06-15", 2.75), ("2006-08-09", 3.00), ("2006-10-11", 3.25),
+    ("2006-12-13", 3.50),
+    ("2007-03-14", 3.75), ("2007-06-13", 4.00),
+    ("2008-07-09", 4.25),
+]
+
 LETRAS_TENORS = [3, 6, 9, 12]  # months
 
 
@@ -123,6 +141,20 @@ def fetch_ecb(series_id: str, start: str) -> list[tuple[str, float]]:
         except (KeyError, ValueError):
             continue
     return rows
+
+
+def with_min_bid_rate(rows: list[tuple[str, float]]) -> list[tuple[str, float]]:
+    """Fill the variable-rate-tender gap of the MRO series with daily minimum bid rates."""
+    start = date.fromisoformat(ECB_MRO_MIN_BID_RATE[0][0])
+    end = date.fromisoformat(ECB_MRO_VARIABLE_TENDER_END)
+    changes = dict(ECB_MRO_MIN_BID_RATE)
+    filled, rate, d = [], None, start
+    while d <= end:
+        rate = changes.get(d.isoformat(), rate)
+        filled.append((d.isoformat(), rate))
+        d += timedelta(days=1)
+    gap = {r[0] for r in filled}
+    return sorted([r for r in rows if r[0] not in gap] + filled)
 
 
 def compress_steps(rows: list[tuple[str, float]]) -> list[tuple[str, float]]:
@@ -298,7 +330,10 @@ def main() -> int:
     for s in ECB_SERIES:
         total += 1
         try:
-            rows = compress_steps(fetch_ecb(s["id"], START))
+            rows = fetch_ecb(s["id"], START)
+            if s["key"] == "ecb_mrr":
+                rows = with_min_bid_rate(rows)
+            rows = compress_steps(rows)
             if not rows:
                 raise RuntimeError("no observations")
             write_series({
