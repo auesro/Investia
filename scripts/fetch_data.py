@@ -40,7 +40,7 @@ USER_AGENT = "Mozilla/5.0 (compatible; investia-data-fetcher/1.0)"
 FRED_CSV = "https://fred.stlouisfed.org/graph/fredgraph.csv?id={id}&cosd={start}"
 FRED_PAGE = "https://fred.stlouisfed.org/series/{id}"
 ECB_CSV = "https://data-api.ecb.europa.eu/service/data/FM/{id}?format=csvdata&detail=dataonly&startPeriod={start}"
-ECB_PAGE = "https://data.ecb.europa.eu/data/datasets/FM/{id}"
+ECB_PAGE = "https://data.ecb.europa.eu/data/datasets/FM/FM.{id}"
 TESORO = "https://www.tesoro.es"
 TESORO_FILES = [
     # Every auction 2001 to last year, one sheet per year
