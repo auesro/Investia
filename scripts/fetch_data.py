@@ -59,7 +59,6 @@ FRED_SERIES = [
     {"key": "cpi_yoy", "id": "CPIAUCSL", "name": "CPI inflation (YoY)", "unit": "%",
      "transform": "yoy", "fetch_start": "1999-01-01"},
     {"key": "unrate", "id": "UNRATE", "name": "Unemployment rate", "unit": "%"},
-    {"key": "wti", "id": "DCOILWTICO", "name": "WTI crude oil", "unit": "USD/bbl"},
     {"key": "eurusd", "id": "DEXUSEU", "name": "EUR / USD", "unit": "USD per EUR"},
     {"key": "btc", "id": "CBBTCUSD", "name": "Bitcoin", "unit": "USD"},
 ]

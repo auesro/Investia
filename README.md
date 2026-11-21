@@ -7,7 +7,7 @@ data every day and redeploys the site, so there is no server and no API key.
 ## What's on the page
 
 - **Summary tiles:** ECB main refinancing rate, the latest 12-month and 3-month
-  Letras del Tesoro marginal yields, S&P 500, US 10-year Treasury, US CPI inflation, WTI oil
+  Letras del Tesoro marginal yields, S&P 500, US 10-year Treasury, US CPI inflation
   and Bitcoin. Each shows its latest value and its change over the selected range.
 - **Spain & euro area:**
   - *Letras del Tesoro: auction yields.* The marginal (highest accepted) yield of
