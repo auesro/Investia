@@ -228,7 +228,7 @@
   </main>
 
   <footer class="wrap foot">
-    <p>Data: <a href="https://www.tesoro.es/" rel="noopener">Tesoro Público</a> (Spanish Treasury), <a href="https://data.ecb.europa.eu/" rel="noopener">European Central Bank</a> and <a href="https://fred.stlouisfed.org/" rel="noopener">FRED, Federal Reserve Bank of St. Louis</a>. Refreshed daily. For information only, not investment advice.</p>
+    <p>Data: <a href="https://www.tesoro.es/" target="_blank" rel="noopener noreferrer">Tesoro Público</a> (Spanish Treasury), <a href="https://data.ecb.europa.eu/" target="_blank" rel="noopener noreferrer">European Central Bank</a> and <a href="https://fred.stlouisfed.org/" target="_blank" rel="noopener noreferrer">FRED, Federal Reserve Bank of St. Louis</a>. Refreshed daily. For information only, not investment advice.</p>
     <p class="copyright">© <span id="year">2026</span> Investia · Created by: Augusto Escalante</p>
   </footer>
 
@@ -726,7 +726,7 @@
         if (seen.size) span.append(", ");
         seen.add(d.url);
         const a = document.createElement("a");
-        a.href = d.url; a.rel = "noopener";
+        a.href = d.url; a.target = "_blank"; a.rel = "noopener noreferrer";
         a.textContent = d.source_short === "Tesoro" ? "Tesoro Público" : `${d.source_short || "FRED"} ${d.id}`;
         span.appendChild(a);
       }
@@ -787,7 +787,7 @@
       const foot = document.createElement("div"); foot.className = "card-foot";
       const src = document.createElement("span");
       src.append("Source: ");
-      const a = document.createElement("a"); a.href = auctions.url; a.rel = "noopener"; a.textContent = "Tesoro Público, latest auction results";
+      const a = document.createElement("a"); a.href = auctions.url; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = "Tesoro Público, latest auction results";
       src.appendChild(a);
       foot.appendChild(src);
       card.appendChild(foot);
