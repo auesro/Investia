@@ -26,6 +26,7 @@ import os
 import re
 import sys
 import time
+import urllib.parse
 import urllib.request
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -41,6 +42,15 @@ FRED_CSV = "https://fred.stlouisfed.org/graph/fredgraph.csv?id={id}&cosd={start}
 FRED_PAGE = "https://fred.stlouisfed.org/series/{id}"
 ECB_CSV = "https://data-api.ecb.europa.eu/service/data/FM/{id}?format=csvdata&detail=dataonly&startPeriod={start}"
 ECB_PAGE = "https://data.ecb.europa.eu/data/datasets/FM/FM.{id}"
+# MSCI's own index-level service (the one behind msci.com's index pages)
+MSCI_LEVELS = ("https://app2.msci.com/products/service/index/indexmaster/getLevelDataForGraph"
+               "?currency_symbol=USD&index_variant=STRD&start_date={start}&end_date={end}"
+               "&data_frequency=DAILY&index_codes={code}")
+MSCI_PAGE = "https://www.msci.com/indexes/index/{code}"
+# Yahoo Finance chart service: not an official public API, it may change without notice.
+# If it fails, the previously published data is reused (see fallback()).
+YAHOO_CHART = "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?period1={p1}&period2={p2}&interval=1d"
+YAHOO_PAGE = "https://finance.yahoo.com/quote/{symbol}/"
 TESORO = "https://www.tesoro.es"
 TESORO_FILES = [
     # Every auction 2001 to last year, one sheet per year
@@ -61,6 +71,13 @@ FRED_SERIES = [
     {"key": "unrate", "id": "UNRATE", "name": "Unemployment rate", "unit": "%"},
     {"key": "eurusd", "id": "DEXUSEU", "name": "EUR / USD", "unit": "USD per EUR"},
     {"key": "btc", "id": "CBBTCUSD", "name": "Bitcoin", "unit": "USD"},
+]
+
+INDEX_SERIES = [
+    {"key": "ibex35", "provider": "yahoo", "id": "^IBEX", "name": "IBEX 35", "unit": "index"},
+    {"key": "stoxx50", "provider": "yahoo", "id": "^STOXX50E", "name": "Euro Stoxx 50", "unit": "index"},
+    {"key": "msci_world", "provider": "msci", "id": "990100", "name": "MSCI World", "unit": "index (USD)"},
+    {"key": "msci_em", "provider": "msci", "id": "891800", "name": "MSCI Emerging Markets", "unit": "index (USD)"},
 ]
 
 ECB_SERIES = [
@@ -127,6 +144,30 @@ def yoy(rows: list[tuple[str, float]]) -> list[tuple[str, float]]:
         if prev:
             out.append((d, round((value / prev - 1) * 100, 2)))
     return out
+
+
+# ---- Stock indices: Yahoo Finance and MSCI --------------------------------
+def fetch_yahoo(symbol: str, start: str) -> list[tuple[str, float]]:
+    p1 = int(datetime.fromisoformat(start).replace(tzinfo=timezone.utc).timestamp())
+    p2 = int(time.time())
+    url = YAHOO_CHART.format(symbol=urllib.parse.quote(symbol), p1=p1, p2=p2)
+    result = json.loads(get(url))["chart"]["result"][0]
+    offset = result["meta"].get("gmtoffset", 0)
+    closes = result["indicators"]["quote"][0]["close"]
+    rows = {}
+    for ts, close in zip(result["timestamp"], closes):
+        if close is not None:
+            day = datetime.fromtimestamp(ts + offset, tz=timezone.utc).date().isoformat()
+            rows[day] = round(close, 2)
+    return sorted(rows.items())
+
+
+def fetch_msci(code: str, start: str) -> list[tuple[str, float]]:
+    url = MSCI_LEVELS.format(code=code, start=start.replace("-", ""),
+                             end=date.today().strftime("%Y%m%d"))
+    levels = json.loads(get(url))["indexes"]["INDEX_LEVELS"]
+    return [(f"{str(x['calc_date'])[:4]}-{str(x['calc_date'])[4:6]}-{str(x['calc_date'])[6:]}",
+             round(x["level_eod"], 2)) for x in levels]
 
 
 # ---- ECB ------------------------------------------------------------------
@@ -321,6 +362,24 @@ def main() -> int:
                 "source": "FRED, Federal Reserve Bank of St. Louis", "source_short": "FRED",
                 "url": FRED_PAGE.format(id=s["id"]),
             }, rows, index)
+        except Exception as err:
+            print(f"  ! {s['key']}: {err}", file=sys.stderr)
+            failures += 0 if fallback(s["key"], index) else 1
+
+    for s in INDEX_SERIES:
+        total += 1
+        try:
+            if s["provider"] == "yahoo":
+                rows = fetch_yahoo(s["id"], START)
+                source = {"source": "Yahoo Finance", "source_short": "Yahoo Finance",
+                          "url": YAHOO_PAGE.format(symbol=urllib.parse.quote(s["id"]))}
+            else:
+                rows = fetch_msci(s["id"], START)
+                source = {"source": "MSCI", "source_short": "MSCI", "url": MSCI_PAGE.format(code=s["id"])}
+            if len(rows) < 100:
+                raise RuntimeError(f"only {len(rows)} observations")
+            write_series({"key": s["key"], "id": s["id"], "name": s["name"], "unit": s["unit"], **source},
+                         rows, index)
         except Exception as err:
             print(f"  ! {s['key']}: {err}", file=sys.stderr)
             failures += 0 if fallback(s["key"], index) else 1

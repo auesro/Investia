@@ -7,8 +7,8 @@ data every day and redeploys the site, so there is no server and no API key.
 ## What's on the page
 
 - **Summary tiles:** ECB main refinancing rate, the latest 12-month and 3-month
-  Letras del Tesoro marginal yields, S&P 500, US 10-year Treasury, US CPI inflation
-  and Bitcoin. Each shows its latest value and its change over the selected range.
+  Letras del Tesoro marginal yields, IBEX 35, Euro Stoxx 50, S&P 500, MSCI World,
+  MSCI Emerging Markets, US 10-year Treasury, US CPI inflation and Bitcoin. Each shows its latest value and its change over the selected range.
 - **Spain & euro area:**
   - *Letras del Tesoro: auction yields.* The marginal (highest accepted) yield of
     every Spanish Treasury bill auction for the 3-, 6-, 9- and 12-month maturities, from 2000 on.
@@ -18,18 +18,21 @@ data every day and redeploys the site, so there is no server and no API key.
     bid-to-cover ratio, marginal and average yield, and the change since the
     previous auction (marginal yield), for each maturity.
   - *ECB main refinancing rate.* The interest rate on the ECB's main refinancing operations.
-- **United States & global markets:** S&P 500, US interest rates, inflation,
-  unemployment, EUR/USD and Bitcoin.
+  - *IBEX 35* and *Euro Stoxx 50* stock indices (Euro Stoxx 50 data starts in 2007).
+- **United States:** S&P 500, US interest rates, inflation and unemployment.
+- **Global markets:** MSCI World, MSCI Emerging Markets, EUR/USD and Bitcoin.
 - One range filter (1Y, 5Y, 10Y or Max) controls every chart. Each chart has a
   hover or keyboard tooltip and a monthly table view. Light and dark themes are included.
 
-### Data sources (all public, no API keys)
+### Data sources (all free, no API keys)
 
 | Data | Source |
 |---|---|
 | Letras del Tesoro auctions | [Tesoro Público](https://www.tesoro.es/deuda-publica/historico-de-estadisticas/subastas): the historical auctions workbook (2001 to last year), monthly bulletin table 11 (current year) and the [latest results page](https://www.tesoro.es/deuda-publica/subastas/resultado-ultimas-subastas/letras-del-tesoro) |
 | ECB main refinancing rate | [ECB Data Portal](https://data.ecb.europa.eu/) API, series FM.D.U2.EUR.4F.KR.MRR_FR.LEV |
 | US and market series | [FRED](https://fred.stlouisfed.org/) CSV download endpoint |
+| MSCI World, MSCI Emerging Markets | MSCI's index-level service (the one behind [msci.com](https://www.msci.com/) index pages) |
+| IBEX 35, Euro Stoxx 50 | [Yahoo Finance](https://finance.yahoo.com/) chart service. It is unofficial and may change without notice. If it fails, the last published data is kept. No free official daily source exists: BME offers no public download, STOXX's full-history file stopped in 2016, and the ECB only has monthly Euro Stoxx 50 averages. |
 
 From June 2000 to October 2008 the ECB ran its main refinancing operations as
 variable rate tenders, so the fixed-rate series has no values for that period.

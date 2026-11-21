@@ -228,7 +228,7 @@
   </main>
 
   <footer class="wrap foot">
-    <p>Data: <a href="https://www.tesoro.es/" target="_blank" rel="noopener noreferrer">Tesoro Público</a> (Spanish Treasury), <a href="https://data.ecb.europa.eu/" target="_blank" rel="noopener noreferrer">European Central Bank</a> and <a href="https://fred.stlouisfed.org/" target="_blank" rel="noopener noreferrer">FRED, Federal Reserve Bank of St. Louis</a>. Refreshed daily. For information only, not investment advice.</p>
+    <p>Data: <a href="https://www.tesoro.es/" target="_blank" rel="noopener noreferrer">Tesoro Público</a> (Spanish Treasury), <a href="https://data.ecb.europa.eu/" target="_blank" rel="noopener noreferrer">European Central Bank</a>, <a href="https://www.msci.com/" target="_blank" rel="noopener noreferrer">MSCI</a>, <a href="https://finance.yahoo.com/" target="_blank" rel="noopener noreferrer">Yahoo Finance</a> and <a href="https://fred.stlouisfed.org/" target="_blank" rel="noopener noreferrer">FRED, Federal Reserve Bank of St. Louis</a>. Refreshed daily. For information only, not investment advice.</p>
     <p class="copyright">© <span id="year">2026</span> Investia · Created by: Augusto Escalante</p>
   </footer>
 
@@ -558,7 +558,11 @@
       { key: "ecb_mrr", label: "ECB main refinancing rate", format: pct(2), delta: "pp" },
       { key: "letras_12m", label: "Letras 12M (marginal)", format: pct(3), delta: "pp" },
       { key: "letras_3m", label: "Letras 3M (marginal)", format: pct(3), delta: "pp" },
+      { key: "ibex35", label: "IBEX 35", format: num(0), delta: "pct" },
+      { key: "stoxx50", label: "Euro Stoxx 50", format: num(0), delta: "pct" },
       { key: "sp500", label: "S&P 500", format: num(0), delta: "pct" },
+      { key: "msci_world", label: "MSCI World", format: num(0), delta: "pct" },
+      { key: "msci_em", label: "MSCI Emerging Markets", format: num(0), delta: "pct" },
       { key: "dgs10", label: "US 10Y Treasury", format: pct(2), delta: "pp" },
       { key: "cpi_yoy", label: "US CPI inflation", format: pct(1), delta: "pp", monthly: true },
       { key: "btc", label: "Bitcoin", format: usd(0), delta: "pct" },
@@ -581,10 +585,12 @@
             title: "ECB main refinancing rate", sub: "Interest rate on the ECB's main refinancing operations (%). Jun 2000 – Oct 2008: minimum bid rate of the variable rate tenders.",
             series: ["ecb_mrr"], format: pct(2), tickFormat: pct(1), step: true,
           },
+          { title: "IBEX 35", sub: "Spain's 35 largest listed companies. Index level, daily close", series: ["ibex35"], format: num(0) },
+          { title: "Euro Stoxx 50", sub: "50 largest eurozone companies. Index level, daily close (data from 2007)", series: ["stoxx50"], format: num(0) },
         ],
       },
       {
-        title: "United States & global markets",
+        title: "United States",
         panels: [
           { title: "S&P 500", sub: "Index level, daily close", series: ["sp500"], format: num(0) },
           {
@@ -596,6 +602,13 @@
             format: pct(1), tickFormat: pct(0), refLines: [{ y: 2, label: "Fed target 2%" }], monthly: true,
           },
           { title: "US unemployment rate", sub: "Percent of labor force, monthly", series: ["unrate"], format: pct(1), tickFormat: pct(0), monthly: true },
+        ],
+      },
+      {
+        title: "Global markets",
+        panels: [
+          { title: "MSCI World", sub: "Large and mid-sized companies across developed markets. Index level in USD, daily", series: ["msci_world"], format: num(0) },
+          { title: "MSCI Emerging Markets", sub: "Large and mid-sized companies across emerging markets. Index level in USD, daily", series: ["msci_em"], format: num(0) },
           { title: "EUR / USD", sub: "US dollars per euro, daily", series: ["eurusd"], format: num(4), tickFormat: num(2) },
           { title: "Bitcoin", sub: "US dollars, daily (Coinbase)", series: ["btc"], format: usd(0), tickFormat: compactUsd },
         ],
@@ -654,7 +667,6 @@
     function renderKpis(data, years) {
       const host = document.getElementById("kpis");
       host.replaceChildren();
-      const label = years ? `${years}Y` : "since 2000";
       for (const k of KPIS) {
         const s = data[k.key];
         if (!s) continue;
@@ -670,7 +682,7 @@
         mark.className = change >= 0 ? "up" : "down";
         const arrow = change >= 0 ? "▲" : "▼";
         mark.textContent = `${arrow} ${num(1)(Math.abs(change))}${k.delta === "pct" ? "%" : " pp"}`;
-        d.append(mark, ` ${label}`);
+        d.append(mark, years ? ` ${years}Y` : ` since ${new Date(first[0]).getUTCFullYear()}`);
         const asof = document.createElement("div"); asof.className = "kpi-date";
         asof.textContent = `as of ${formatDate(last[0], k.monthly)}`;
         tile.title = `${s.name}. Source: ${s.source}`;
@@ -727,7 +739,9 @@
         seen.add(d.url);
         const a = document.createElement("a");
         a.href = d.url; a.target = "_blank"; a.rel = "noopener noreferrer";
-        a.textContent = d.source_short === "Tesoro" ? "Tesoro Público" : `${d.source_short || "FRED"} ${d.id}`;
+        a.textContent = d.source_short === "Tesoro" ? "Tesoro Público"
+          : ["Yahoo Finance", "MSCI"].includes(d.source_short) ? d.source_short
+          : `${d.source_short || "FRED"} ${d.id}`;
         span.appendChild(a);
       }
       return span;
